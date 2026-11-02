@@ -1,78 +1,90 @@
 /**
- * PATRÓN: Factory Method (Creacional)
+ * ! Factory Method:
+ * El patrón Factory Method permite crear objetos sin especificar
+ * la clase exacta del objeto que se creará.
  *
- * QUÉ HACE:
- *   Define un método para crear objetos en una clase base, pero deja que
- *   las subclases decidan qué clase concreta se instancia. El código cliente
- *   trabaja con la interfaz del producto y no con las clases concretas.
+ * En lugar de eso, delegamos la creación de objetos a subclases o métodos
+ * que encapsulan esta lógica.
  *
- * PROBLEMA QUE RESUELVE:
- *   Una aplicación debe enviar notificaciones por correo, SMS o push. Si el
- *   código cliente crea los objetos con "new NotificacionEmail()" directamente,
- *   queda acoplado a cada clase concreta y agregar un canal nuevo obliga a
- *   modificar ese código en todos los lugares donde se usa.
+ * * Es útil cuando una clase no puede anticipar la clase
+ * * de objetos que debe crear.
  *
- * POR QUÉ ES ADECUADO:
- *   La decisión de qué notificación crear se mueve a un método fábrica que
- *   sobrescribe cada subclase. El cliente solo llama a notificar() y no sabe
- *   (ni le importa) qué canal se usa. Para agregar WhatsApp, por ejemplo,
- *   solo se crean dos clases nuevas sin modificar el código existente.
+ * https://refactoring.guru/es/design-patterns/factory-method
  *
- * CÓMO EJECUTAR:
- *   deno run factory-method.task.ts
  */
 
-// 1. Producto: interfaz común de todas las notificaciones.
-export interface Notificacion {
-  enviar(mensaje: string): void;
+import { COLORS } from '../../helpers/colors.ts';
+
+interface Hamburger {
+    prepare(): void;
 }
 
-// 2. Productos concretos: cada canal implementa su propia forma de enviar.
-export class NotificacionEmail implements Notificacion {
-  enviar(mensaje: string): void {
-    console.log(`[EMAIL] Enviando correo: ${mensaje}`);
-  }
+class ChickenHamburger implements Hamburger {
+    prepare(){
+        console.log('Preparando Hamburguesa de %cPollo', COLORS.yellow);
+    }
 }
 
-export class NotificacionSMS implements Notificacion {
-  enviar(mensaje: string): void {
-    console.log(`[SMS] Enviando mensaje de texto: ${mensaje}`);
-  }
+class BeefHamburger implements Hamburger {
+    prepare(){
+        console.log('Preparando Hamburguesa de %cRes', COLORS.brown);
+    }
 }
 
-export class NotificacionPush implements Notificacion {
-  enviar(mensaje: string): void {
-    console.log(`[PUSH] Enviando notificación al celular: ${mensaje}`);
-  }
+class SpicyHamburger implements Hamburger {
+    prepare(){
+        console.log('Preparando Hamburguesa de %cPicante', COLORS.red);
+    }
 }
 
-// 3. Creador: declara el método fábrica y usa el producto que este devuelve.
-export abstract class CreadorNotificacion {
-  // MÉTODO FÁBRICA: cada subclase decide qué objeto crear.
-  protected abstract crearNotificacion(): Notificacion;
+abstract class RestaurantFactory {
+    protected abstract createHamburger(): Hamburger;
 
-  // Lógica común que usa el producto sin conocer su clase concreta.
-  notificar(mensaje: string): void {
-    const notificacion = this.crearNotificacion();
-    notificacion.enviar(mensaje);
-  }
+    orderHamburger(): void {
+        const hamburguer = this.createHamburger();
+        hamburguer.prepare();
+    }
+
 }
 
-// 4. Creadores concretos: sobrescriben el método fábrica.
-export class CreadorEmail extends CreadorNotificacion {
-  protected crearNotificacion(): Notificacion {
-    return new NotificacionEmail();
-  }
+class ChickenRestaurant extends RestaurantFactory {
+    createHamburger(): Hamburger {
+        return new ChickenHamburger();
+    }
 }
 
-export class CreadorSMS extends CreadorNotificacion {
-  protected crearNotificacion(): Notificacion {
-    return new NotificacionSMS();
-  }
+class BeefRestaurant extends RestaurantFactory {
+    createHamburger(): Hamburger {
+        return new BeefHamburger();
+    }
 }
 
-export class CreadorPush extends CreadorNotificacion {
-  protected crearNotificacion(): Notificacion {
-    return new NotificacionPush();
-  }
+class SpicyRestaurant extends RestaurantFactory {
+    createHamburger(): Hamburger {
+        return new SpicyHamburger();
+    }
 }
+
+function main(){
+    let restaurant: RestaurantFactory;
+    
+    const burgerType = prompt('¿Qué tipo de hamburguesa quieres? (Chicken/Beef/Spicy)');
+    switch(burgerType){
+        case 'Chicken': 
+            restaurant = new ChickenRestaurant();
+            break;
+        case 'Beef': 
+            restaurant = new BeefRestaurant();
+            break;
+        case 'Spicy': 
+            restaurant = new SpicyRestaurant();
+            break;
+        default:
+            throw new Error('Opción no Válida');
+    }
+
+    restaurant.orderHamburger();
+
+}
+
+main();

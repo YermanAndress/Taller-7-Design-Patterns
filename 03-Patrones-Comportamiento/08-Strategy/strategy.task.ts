@@ -1,25 +1,112 @@
+
 /**
- * EJECUCIÓN DEL EJERCICIO: Strategy
+ * ! Patrón Strategy
  *
- * Cliente que usa una misma instancia de Carrito y cambia la estrategia de
- * descuento en tiempo de ejecución, sin modificar la clase Carrito.
+ * El patrón Strategy es un patrón de diseño de software que define una
+ * familia de algoritmos, los encapsula y los hace intercambiables.
  *
- * CÓMO EJECUTAR:
- *   deno run strategy.task.ts
+ *
+ * * Es útil cuando se tiene una clase que tiene un comportamiento que puede
+ * * cambiar en tiempo de ejecución y se quiere delegar la responsabilidad de
+ * * la implementación a otra clase.
+ *
+ * https://refactoring.guru/es/design-patterns/strategy
  */
-import { Carrito, DescuentoFijo, DescuentoPorcentaje } from "./strategy.ts";
 
-const carrito = new Carrito();
-carrito.agregarProducto(50000);
-carrito.agregarProducto(30000);
-carrito.agregarProducto(20000); // Subtotal: 100000
+/**
+ * !Objetivo: 
+ * Implementar el patrón Strategy para calcular los impuestos de diferentes países.
+ * 
+ * !Descripción del Ejercicio
 
-console.log("Subtotal de la compra: $100000\n");
+  Imagina que trabajas en una plataforma de comercio electrónico que opera en varios países. 
+  Cada país tiene su propio método para calcular impuestos, 
+  y necesitas implementar un sistema que sea:
 
-console.log(`${carrito.descuentoActual()} -> $${carrito.calcularTotal()}`);
+    1. Flexible: Permita agregar nuevos cálculos de impuestos 
+       sin modificar la lógica existente.
+    2. Dinámico: Cambie la estrategia de cálculo de impuestos en tiempo 
+       de ejecución según el país seleccionado.
+ */
 
-carrito.setEstrategia(new DescuentoPorcentaje(10));
-console.log(`${carrito.descuentoActual()} -> $${carrito.calcularTotal()}`);
+/**	
+    1.	Implementar una interfaz TaxStrategy que defina un método 
+        calculateTax(amount: number): number.
+        
+    2.	Crear clases específicas de estrategia para los países disponibles:
+      •	USA: Impuesto del 10%.
+      •	Canada: Impuesto del 13%.
+      •	Germany: Impuesto del 19%.
+      
+    3.	Implementar una clase TaxCalculator que utilice las estrategias 
+        para calcular los impuestos.
+ */
 
-carrito.setEstrategia(new DescuentoFijo(15000));
-console.log(`${carrito.descuentoActual()} -> $${carrito.calcularTotal()}`);
+import { COLORS } from '../../helpers/colors.ts';
+
+// Interfaz Strategy
+interface TaxStrategy {
+  calculateTax(amount: number): number;
+}
+
+// Estrategia 1: Impuestos en USA
+class USATaxStrategy implements TaxStrategy {
+  // TODO: Implementar el método calculateTax = amount * 0.1
+  calculateTax(amount: number): number {
+    return amount * 0.1;
+  }
+}
+
+// Estrategia 2: Impuestos en Canada
+class CanadaTaxStrategy implements TaxStrategy {
+  // TODO: Implementar el método calculateTax = amount * 0.13
+  calculateTax(amount: number): number {
+    return amount * 0.13;
+  }
+}
+
+// Estrategia 3: Impuestos en Germany
+class GermanyTaxStrategy implements TaxStrategy {
+  // TODO: Implementar el método calculateTax = amount * 0.19
+  calculateTax(amount: number): number {
+    return amount * 0.19;
+  }
+}
+
+// Clase Contexto - TaxCalculator
+class TaxCalculator {
+  private strategy: TaxStrategy;
+
+  // TODO: Implementar el constructor recibiendo la estrategia a usar
+  constructor(stratey: TaxStrategy){
+    this.strategy = stratey;
+  }
+
+  // Cambiar la estrategia de cálculo de impuestos
+  setStrategy(strategy: TaxStrategy): void {
+    this.strategy = strategy;
+  }
+
+  // Calcular impuestos
+  calculate(amount: number): number {
+    return this.strategy.calculateTax(amount);
+  }
+}
+
+// Código Cliente para probar
+function main(): void {
+  const taxCalculator = new TaxCalculator(new USATaxStrategy());
+
+  console.log('%cCálculo de impuestos:\n', COLORS.red);
+  console.log('USA: $', taxCalculator.calculate(100).toFixed(2));
+
+  console.log('\nCambiando a estrategia para Canada...');
+  taxCalculator.setStrategy(new CanadaTaxStrategy());
+  console.log('Canada: $', taxCalculator.calculate(100).toFixed(2));
+
+  console.log('\nCambiando a estrategia para Germany...');
+  taxCalculator.setStrategy(new GermanyTaxStrategy());
+  console.log('Germany: $', taxCalculator.calculate(100).toFixed(2));
+}
+
+main();
