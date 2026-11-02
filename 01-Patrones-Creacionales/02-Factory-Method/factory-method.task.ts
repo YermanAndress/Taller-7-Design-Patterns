@@ -1,27 +1,94 @@
 /**
- * EJECUCIÓN DEL EJERCICIO: Factory Method
+ * ! Factory Method:
+ * El patrón Factory Method permite crear objetos sin especificar
+ * la clase exacta del objeto que se creará.
  *
- * Cliente que usa únicamente el creador abstracto (CreadorNotificacion).
- * Nunca instancia NotificacionEmail, NotificacionSMS ni NotificacionPush
- * directamente: cada creador concreto decide qué producto fabricar.
+ * En lugar de eso, delegamos la creación de objetos a subclases o métodos
+ * que encapsulan esta lógica.
  *
- * CÓMO EJECUTAR:
- *   deno run factory-method.task.ts
+ * * Es útil cuando una clase no puede anticipar la clase
+ * * de objetos que debe crear.
+ *
+ * https://refactoring.guru/es/design-patterns/factory-method
  */
-import {
-  CreadorEmail,
-  CreadorNotificacion,
-  CreadorPush,
-  CreadorSMS,
-} from "./factory-method.ts";
 
-const canales: CreadorNotificacion[] = [
-  new CreadorEmail(),
-  new CreadorSMS(),
-  new CreadorPush(),
-];
+/**
+ * 	!Descripción:
+  1.	Completen las clases SalesReport e InventoryReport para implementar 
+      la interfaz Report, generando el contenido de cada reporte en el método generate.
+	  
+  2.	Implementen las clases SalesReportFactory e InventoryReportFactory 
+      para crear instancias de SalesReport y InventoryReport, respectivamente.
 
-// El mismo código sirve para cualquier canal.
-for (const canal of canales) {
-  canal.notificar("Tu pedido fue enviado");
+	3.	Prueben el programa generando diferentes tipos de reportes usando
+      el prompt para seleccionar el tipo de reporte.
+ */
+
+import { COLORS } from '../../helpers/colors.ts';
+
+// 1. Definir la interfaz Report
+interface Report {
+  generate(): void;
 }
+
+// 2. Clases concretas de Reportes
+// Implementar SalesReport e InventoryReport
+
+class SalesReport implements Report {
+  // TODO: implementar el método e imprimir en consola:
+  // 'Generando reporte de ventas...'
+  generate(){
+    console.log('%cGenerando Reporte de Ventas...', COLORS.green);
+  }
+}
+
+class InventoryReport implements Report {
+  // TODO: implementar el método e imprimir en consola:
+  // 'Generando reporte de inventario...'
+  generate(){
+    console.log('%cGenerando Reporte de Invetario...', COLORS.orange);
+  }
+}
+
+// 3. Clase Base ReportFactory con el Método Factory
+
+abstract class ReportFactory {
+  protected abstract createReport(): Report;
+
+  generateReport(): void {
+    const report = this.createReport();
+    report.generate();
+  }
+}
+
+// 4. Clases Concretas de Fábricas de Reportes
+
+class SalesReportFactory extends ReportFactory {
+  createReport(): Report {
+    return new SalesReport();
+  }
+}
+
+class InventoryReportFactory extends ReportFactory {
+  createReport(): Report {
+    return new InventoryReport();
+  }
+}
+
+// 5. Código Cliente para Probar
+
+function main() {
+  let reportFactory: ReportFactory;
+
+  const reportType = prompt('¿Qué tipo de reporte deseas? (sales/inventory)');
+
+  if (reportType === 'sales') {
+    reportFactory = new SalesReportFactory();
+  } else {
+    reportFactory = new InventoryReportFactory();
+  }
+
+  reportFactory.generateReport();
+}
+
+main();
