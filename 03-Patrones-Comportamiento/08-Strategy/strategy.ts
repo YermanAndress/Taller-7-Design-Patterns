@@ -1,90 +1,96 @@
 /**
- * ! Patrón Strategy
+ * PATRÓN: Strategy (Comportamiento)
  *
- * El patrón Strategy es un patrón de diseño de software que define una
- * familia de algoritmos, los encapsula y los hace intercambiables.
+ * QUÉ HACE:
+ *   Define una familia de algoritmos, encapsula cada uno en su propia clase
+ *   y los hace intercambiables. El objeto que los usa (contexto) puede
+ *   cambiar de algoritmo en tiempo de ejecución sin modificarse.
  *
+ * PROBLEMA QUE RESUELVE:
+ *   Una tienda necesita calcular el total de una compra aplicando distintos
+ *   tipos de descuento (ninguno, por porcentaje, por valor fijo). Si se
+ *   resuelve con if/else dentro del carrito, cada descuento nuevo obliga a
+ *   modificar esa clase, que se vuelve larga, frágil y difícil de probar.
  *
- * * Es útil cuando se tiene una clase que tiene un comportamiento que puede
- * * cambiar en tiempo de ejecución y se quiere delegar la responsabilidad de
- * * la implementación a otra clase.
+ * POR QUÉ ES ADECUADO:
+ *   Cada tipo de descuento queda en una clase independiente que implementa
+ *   la misma interfaz. El carrito solo conoce la interfaz, así que se pueden
+ *   agregar descuentos nuevos sin tocar el carrito (principio abierto/cerrado)
+ *   y se elige el descuento en tiempo de ejecución (por ejemplo, según el cliente).
  *
- * https://refactoring.guru/es/design-patterns/strategy
+ * CÓMO EJECUTAR:
+ *   deno run strategy.task.ts
  */
 
-import { COLORS } from "../../helpers/colors.ts";
-
-/**
- * !Objetivo: Explicar el patrón Strategy usando un ejemplo donde varios
- * ! patitos compiten en una carrera y cada uno tiene su propia
- * ! estrategia de movimiento (por ejemplo, nadar, volar o caminar).
- */
-
-interface MovementStrategy {
-    move(): void;
+// 1. Interfaz Strategy: contrato común que todos los descuentos cumplen.
+export interface EstrategiaDescuento {
+  aplicar(total: number): number;
+  nombre(): string;
 }
 
-// Estrategia #1 Rapida pero Costosa
-class SwimFast implements MovementStrategy {
-    move(): void {
-        console.log('%cEl pato nada rapidamente sobre el agua\n', COLORS.blue);
-    }
+// 2. Estrategias concretas: cada una implementa un algoritmo distinto.
+export class SinDescuento implements EstrategiaDescuento {
+  aplicar(total: number): number {
+    return total; // No se modifica el total.
+  }
+
+  nombre(): string {
+    return "Sin descuento";
+  }
 }
 
-// Estrategia #2 No tan Rapido pero no tan Costosa
-class FlyOverWater implements MovementStrategy {
-    move(): void {
-        console.log('%cEl pato vuela elegantemente sobre el agua\n', COLORS.pink);
-    }
+export class DescuentoPorcentaje implements EstrategiaDescuento {
+  private porcentaje: number; // Ej: 10 significa 10 %
+
+  constructor(porcentaje: number) {
+    this.porcentaje = porcentaje;
+  }
+
+  aplicar(total: number): number {
+    return total - (total * this.porcentaje) / 100;
+  }
+
+  nombre(): string {
+    return `Descuento del ${this.porcentaje} %`;
+  }
 }
 
-// Estrategia #3 Lenta y Economica
-class WalkClumsily implements MovementStrategy {
-    move(): void {
-        console.log('%cEl pato camina torpemente por la orilla\n', COLORS.green);
-    }
+export class DescuentoFijo implements EstrategiaDescuento {
+  private monto: number;
+
+  constructor(monto: number) {
+    this.monto = monto;
+  }
+
+  aplicar(total: number): number {
+    return Math.max(0, total - this.monto); // El total nunca queda negativo.
+  }
+
+  nombre(): string {
+    return `Cupón de $${this.monto}`;
+  }
 }
 
-//Consumidor de estrategias
-class Duck {
-    private name: string;
-    private movementStrategy: MovementStrategy;
+// 3. Contexto: usa una estrategia sin saber cuál es en concreto.
+export class Carrito {
+  private subtotal = 0;
+  private estrategia: EstrategiaDescuento = new SinDescuento(); // Por defecto.
 
-    constructor(name: string, stratregy: MovementStrategy){
-        this.name = name;
-        this.movementStrategy =  stratregy;
-        console.log(`%c${name} %cListo para competir`, COLORS.green, COLORS.white);
-    }
+  agregarProducto(precio: number): void {
+    this.subtotal += precio;
+  }
 
-    performMove(){
-        console.log(`${this.name} se prepara para moverse ...`);
-        this.movementStrategy.move();
-    }
-    
-    setMovementStrategy(strategy: MovementStrategy){
-        this.movementStrategy = strategy;
-        console.log(`${this.name} cambio de estrategia`);
-    }
+  // Permite cambiar el algoritmo en tiempo de ejecución.
+  setEstrategia(estrategia: EstrategiaDescuento): void {
+    this.estrategia = estrategia;
+  }
 
+  calcularTotal(): number {
+    // El carrito delega el cálculo en la estrategia actual.
+    return this.estrategia.aplicar(this.subtotal);
+  }
+
+  descuentoActual(): string {
+    return this.estrategia.nombre();
+  }
 }
-
-function main(){
-    const duck1 = new Duck('Patito Rapido', new SwimFast());
-    const duck2 = new Duck('Patito Volador', new FlyOverWater());
-    const duck3 = new Duck('Patito Torpe', new WalkClumsily());
-
-    console.log('%cComienza la carrera de Patos', COLORS.red);
-
-    duck1.performMove();
-    duck2.performMove();
-    duck3.performMove();
-
-    duck3.setMovementStrategy(new FlyOverWater());
-    duck3.performMove();
-
-    duck3.setMovementStrategy(new SwimFast());
-    duck3.performMove();
-
-}
-
-main();
